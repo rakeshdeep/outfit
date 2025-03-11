@@ -37,7 +37,13 @@ cd outfit
 npm install
 ```
 
-3. Run the development server:
+3. Set up environment variables:
+```bash
+cp .env.example .env.local
+```
+Edit .env.local with your configuration settings
+
+4. Run the development server:
 ```bash
 npm run dev
 ```
