@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server';
-import OpenAI from 'openai';
-import { analyzeImage } from '@/lib/vision';
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+import { NextResponse } from "next/server";
+import Groq from "groq-sdk";
+
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY,
 });
 
 export async function POST(req: Request) {
@@ -11,14 +11,14 @@ export async function POST(req: Request) {
 
     if (!imageUrl) {
       return NextResponse.json(
-        { error: 'Image URL is required' },
+        { error: "Image URL is required" },
         { status: 400 }
       );
     }
 
-    // Analyze the image using OpenAI's Vision API
-    const imageAnalysis = await openai.chat.completions.create({
-      model: "gpt-4-vision-preview",
+    // Analyze the image using Groq's Vision API
+    const imageAnalysis = await groq.chat.completions.create({
+      model: "llama-3.2-90b-vision-preview",
       messages: [
         {
           role: "user",
@@ -29,40 +29,43 @@ export async function POST(req: Request) {
             },
             {
               type: "image_url",
-              image_url: imageUrl
+              image_url: {
+                url: imageUrl
+              }
             }
           ]
         }
       ],
       max_tokens: 500,
       temperature: 0.5,
-        top_p: 1,
+      top_p: 1
     });
 
     // Get outfit suggestions based on the analysis
-    const outfitSuggestion = await openai.chat.completions.create({
-      model: "gpt-4",
+    const outfitSuggestion = await groq.chat.completions.create({
+      model: "llama-3.2-90b", // Using base model for text completion
       messages: [
         {
           role: "system",
-          content: "You are a professional fashion consultant. Provide specific outfit suggestions based on the person's characteristics."
+          content:
+            "You are a professional fashion consultant. Provide specific outfit suggestions based on the person's characteristics."
         },
         {
           role: "user",
           content: `Based on these characteristics: ${imageAnalysis.choices[0].message.content}, suggest 3 appropriate outfits that would suit this person well. Include specific items, colors, and styling tips.`
         }
       ],
+      max_tokens: 1000
     });
 
     return NextResponse.json({
       analysis: imageAnalysis.choices[0].message.content,
       suggestions: outfitSuggestion.choices[0].message.content
     });
-
-  } catch (error) {
-    console.error('Error processing image:', error);
+  } catch (error: any) {
+    console.error("Error processing image:", error);
     return NextResponse.json(
-      { error: 'Failed to process image' },
+      { error: "Failed to process image", details: error.message },
       { status: 500 }
     );
   }

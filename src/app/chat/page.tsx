@@ -15,6 +15,7 @@ const AIChat = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
+  
   const handleSendMessage = async () => {
     if (!input.trim() && !selectedImage) return;
 
@@ -29,18 +30,56 @@ const AIChat = () => {
     setSelectedImage(null);
     setIsLoading(true);
 
-    // Simulate AI response (replace with actual API call)
-    setTimeout(() => {
+    try {
+      // Only make API call if there's an image
+      if (newMessage.image) {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            imageUrl: newMessage.image,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to get response');
+        }
+
+        const data = await response.json();
+
+        // Add AI response with analysis and suggestions
+        setMessages((prev) => [
+          ...prev,
+          {
+            type: "ai",
+            content: `Analysis: ${data.analysis}\n\nSuggestions: ${data.suggestions}`,
+          },
+        ]);
+      } else {
+        // Handle text-only messages (optional)
+        setMessages((prev) => [
+          ...prev,
+          {
+            type: "ai",
+            content: "Please provide an image for outfit analysis and suggestions.",
+          },
+        ]);
+      }
+    } catch (error) {
       setMessages((prev) => [
         ...prev,
         {
           type: "ai",
-          content: "Here's my outfit suggestion based on your input...",
+          content: "Sorry, there was an error processing your request.",
         },
       ]);
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
+
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
