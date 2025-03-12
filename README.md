@@ -2,6 +2,9 @@
 
 An intelligent outfit recommendation system leveraging AI/ML and Natural Language Processing to provide personalized clothing suggestions.
 
+![App screenshort](/public/images/screenshort-1.png)
+![Detection page screenshort](/public/images/detection-screenshort.png)
+
 ## Features
 
 - 🤖 AI-powered outfit recommendations based on user preferences
